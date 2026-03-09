@@ -7,8 +7,9 @@ sys.path.append(current_dir)
 
 # Fix: Create 'sdxl_styles' directory if it doesn't exist
 # Fooocus expects this directory to exist to load custom styles
-styles_dir = os.path.join(current_dir, 'sdxl_styles')
-os.makedirs(styles_dir, exist_ok=True)
+# We create it in both the current directory and src to be safe
+for path in ['sdxl_styles', os.path.join(current_dir, 'sdxl_styles')]:
+    os.makedirs(path, exist_ok=True)
 
 # Set up necessary paths for Fooocus to run
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
