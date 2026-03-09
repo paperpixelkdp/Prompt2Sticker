@@ -23,17 +23,15 @@ if not all_found:
     legal_style_names = ["FATAL ERROR: See console for details."]
 else:
     print("✅ Engine: All required items found.")
-    # Set up necessary paths for Fooocus to run
     os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
-    # Now that all folders are in the correct place, we can import directly.
     try:
         print("⏳ Engine: Loading Fooocus modules...")
+        import modules.config as config
+        import modules.core as core
+        import args_manager
         from modules.sdxl_styles import legal_style_names
         print("✅ Engine: Fooocus modules loaded successfully!")
-    except ImportError as e:
-        print(f"❌ ERROR: A required Fooocus module was not found during import.\nDetail: {e}")
-        legal_style_names = ["Error: Styles could not be loaded"]
     except Exception as e:
         print(f"❌ ERROR: An unexpected error occurred while loading modules.\nDetail: {e}")
         legal_style_names = ["Error: Module Load Failed"]
@@ -43,11 +41,68 @@ class FooocusEngine:
     def __init__(self):
         self.styles = legal_style_names
         print(f"✅ Engine: Ready. {len(self.styles)} styles found.")
+        self.models_loaded = False
+        self.load_models()
+
+    def load_models(self):
+        if "FATAL ERROR" in self.styles[0]:
+            print("❌ Engine: Skipping model load due to file verification failure.")
+            return
+
+        print("⏳ Engine: Loading models... This may take a while and download files on the first run.")
+        try:
+            args_manager.args.base = config.default_base_model_name
+            args_manager.args.refiner = None
+            args_manager.args.disable_offload_from_vram = True
+            
+            core.load_models_and_loras()
+            self.models_loaded = True
+            print("✅ Engine: Models loaded successfully.")
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"❌ FATAL ERROR: Could not load models. \nDetail: {e}")
+            self.models_loaded = False
+            self.styles = ["FATAL ERROR: Model load failed. Check console."]
 
     def get_styles(self):
         """Returns the list of available styles."""
         return self.styles
 
     def generate(self, prompt, style):
-        """Placeholder for image generation. To be implemented."""
-        return f"SUCCESS! Engine is running.\nReceived Prompt: {prompt}\nSelected Style: {style}"
+        if not self.models_loaded:
+            print("❌ Engine: Cannot generate, models are not loaded.")
+            return None
+
+        print(f"▶️ Engine: Generating for prompt='{prompt}', style='{style}'")
+        
+        try:
+            result_images = None
+            for result in core.generate_image(
+                prompt=prompt,
+                negative_prompt="",
+                style_selections=[style],
+                performance_selection='Speed',
+                aspect_ratios_selection='1024*1024',
+                image_number=1,
+                image_seed=-1,
+                sharpness=2.0,
+                guidance_scale=4.0,
+                base_model_name=config.default_base_model_name,
+                refiner_model_name='None',
+                refiner_switch=0.1,
+                loras=[]
+            ):
+                result_images = result
+
+            if result_images is None:
+                raise Exception("Image generation failed, no images were returned.")
+
+            print(f"✅ Engine: Generation complete.")
+            return result_images[0]
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"❌ ERROR: Image generation failed.\nDetail: {e}")
+            return None
