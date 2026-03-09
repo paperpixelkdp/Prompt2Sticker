@@ -1,36 +1,33 @@
 import os
 import sys
 
-# src klasörünü Python yoluna ekle ki modülleri bulabilsin
+# Add src folder to Python path to find modules
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
 
-# Fooocus'un çalışması için gerekli yolları ayarla
+# Set up necessary paths for Fooocus to run
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
 try:
-    print("⏳ Fooocus modülleri yükleniyor...")
-    # Fooocus'un kendi modüllerini çağırıyoruz
+    print("⏳ Loading Fooocus modules...")
+    # Importing Fooocus's own modules
     import modules.config as config
     from modules.sdxl_styles import legal_style_names
-    print("✅ Fooocus modülleri başarıyla yüklendi!")
+    print("✅ Fooocus modules loaded successfully!")
 except ImportError as e:
-    print(f"❌ HATA: Fooocus modülleri bulunamadı.\nDetay: {e}")
-    print("Lütfen 'modules' ve 'ldm_patched' klasörlerini 'src' içine kopyaladığından emin ol.")
-    legal_style_names = ["Hata: Stiller Yüklenemedi"]
+    print(f"❌ ERROR: Fooocus modules not found.\nDetail: {e}")
+    print("Please ensure 'modules', 'ldm_patched', and 'args_manager.py' are copied into the 'src' folder.")
+    legal_style_names = ["Error: Styles could not be loaded"]
 
 class FooocusEngine:
     def __init__(self):
         self.styles = legal_style_names
-        print(f"✅ Motor hazır. {len(self.styles)} adet stil bulundu.")
+        print(f"✅ Engine ready. {len(self.styles)} styles found.")
 
     def get_styles(self):
-        """Mevcut stillerin listesini döndürür."""
+        """Returns the list of available styles."""
         return self.styles
 
     def generate(self, prompt, style):
-        """
-        Şimdilik sadece bağlantıyı test ediyoruz.
-        Gerçek resim üretimi bir sonraki adımda eklenecek.
-        """
-        return f"✅ BAŞARILI! Motor çalışıyor.\nGelen Prompt: {prompt}\nSeçilen Stil: {style}"
+        """For now, we are just testing the connection. Real image generation will be added in the next step."""
+        return f"✅ SUCCESS! Engine is running.\nReceived Prompt: {prompt}\nSelected Style: {style}"
