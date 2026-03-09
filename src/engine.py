@@ -5,6 +5,11 @@ import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
 
+# Fix: Create 'sdxl_styles' directory if it doesn't exist
+# Fooocus expects this directory to exist to load custom styles
+styles_dir = os.path.join(current_dir, 'sdxl_styles')
+os.makedirs(styles_dir, exist_ok=True)
+
 # Set up necessary paths for Fooocus to run
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
@@ -18,6 +23,9 @@ except ImportError as e:
     print(f"❌ ERROR: Fooocus modules not found.\nDetail: {e}")
     print("Please ensure 'modules', 'ldm_patched', and 'args_manager.py' are copied into the 'src' folder.")
     legal_style_names = ["Error: Styles could not be loaded"]
+except Exception as e:
+    print(f"❌ ERROR: Unexpected error loading modules.\nDetail: {e}")
+    legal_style_names = ["Error: Module Load Failed"]
 
 class FooocusEngine:
     def __init__(self):
